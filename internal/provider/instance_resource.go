@@ -1,11 +1,9 @@
 package provider
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -206,7 +204,7 @@ func (r *InstanceResource) Create(ctx context.Context, req resource.CreateReques
 	if !data.Name.IsNull() {
 		*name = data.Name.ValueString()
 	}
-	httpResp, err := r.makeAPICall(ctx, http.MethodPost, "instance-operations/launch", InstanceCreateAPIRequest{
+	httpResp, err := MakeAPICall(ctx, r.apiKey, http.MethodPost, "instance-operations/launch", InstanceCreateAPIRequest{
 		RegionName:       data.RegionName.ValueString(),
 		InstanceTypeName: data.InstanceTypeName.ValueString(),
 		SSHKeyNames:      sshKeys,
@@ -254,7 +252,7 @@ func (r *InstanceResource) Read(ctx context.Context, req resource.ReadRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	res, err := r.makeAPICall(ctx, http.MethodGet, fmt.Sprintf("instances/%s", data.Id.ValueString()), nil)
+	res, err := MakeAPICall(ctx, r.apiKey, http.MethodGet, fmt.Sprintf("instances/%s", data.Id.ValueString()), nil)
 	if err != nil {
 		resp.Diagnostics.AddError("resp error", err.Error())
 		return
@@ -322,7 +320,7 @@ func (r *InstanceResource) Delete(ctx context.Context, req resource.DeleteReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	res, err := r.makeAPICall(ctx, http.MethodPost, "instance-operations/terminate", InstanceDeleteApiRequest{
+	res, err := MakeAPICall(ctx, r.apiKey, http.MethodPost, "instance-operations/terminate", InstanceDeleteApiRequest{
 		InstanceIds: []string{data.Id.ValueString()},
 	})
 	if err != nil {
@@ -349,23 +347,4 @@ func (r *InstanceResource) Delete(ctx context.Context, req resource.DeleteReques
 
 func (r *InstanceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func (r *InstanceResource) makeAPICall(ctx context.Context, method, url string, data interface{}) (*http.Response, error) {
-	var reader io.Reader
-	if data != nil {
-		raw, err := json.Marshal(data)
-		if err != nil {
-			return nil, err
-		}
-		reader = bytes.NewReader(raw)
-	}
-	httpReq, err := http.NewRequestWithContext(ctx, method, fmt.Sprintf("https://cloud.lambdalabs.com/api/v1/%s", url), reader)
-	httpReq.SetBasicAuth(r.apiKey, "")
-	if err != nil {
-		return nil, err
-	}
-
-	return http.DefaultClient.Do(httpReq)
-
 }
