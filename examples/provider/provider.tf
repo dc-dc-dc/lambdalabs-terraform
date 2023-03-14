@@ -1,3 +1,3 @@
-provider "scaffolding" {
+provider "lambdalabs" {
   # example configuration here
 }

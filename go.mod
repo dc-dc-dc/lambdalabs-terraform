@@ -1,4 +1,4 @@
-module github.com/hashicorp/terraform-provider-scaffolding-framework
+module github.com/dc-dc-dc/terraform-lambda
 
 go 1.19
 
