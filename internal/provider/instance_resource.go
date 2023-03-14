@@ -35,10 +35,10 @@ type InstanceResourceModel struct {
 	SshKeyNames      types.List   `tfsdk:"ssh_key_names"`
 	FileSystemNames  types.List   `tfsdk:"file_system_names"`
 	// Quantity         types.Number `tfsdk:"quantity"`
-	Name types.String `tfsdk:"name"`
-	// IP     types.String `tfsdk:"ip"`
-	// Status types.String `tfsdk:"status"`
-	Id types.String `tfsdk:"id"`
+	Name   types.String `tfsdk:"name"`
+	IP     types.String `tfsdk:"ip"`
+	Status types.String `tfsdk:"status"`
+	Id     types.String `tfsdk:"id"`
 }
 
 type InstanceCreateAPIRequest struct {
@@ -137,9 +137,25 @@ func (r *InstanceResource) Schema(ctx context.Context, req resource.SchemaReques
 				Optional:    true,
 				Description: "User-provided name for the instance",
 			},
+			"ip": schema.StringAttribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "ip address of the instance",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"status": schema.StringAttribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "description of the instance",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"id": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "Example identifier",
+				Computed:    true,
+				Description: "id of the instance",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -223,6 +239,8 @@ func (r *InstanceResource) Create(ctx context.Context, req resource.CreateReques
 		resp.Diagnostics.AddError("resp error", fmt.Sprintf("expected 1 response got %d", len(respData.Data.InstanceIds)))
 		return
 	}
+	data.IP = types.StringNull()
+	data.Status = types.StringNull()
 	data.Id = types.StringValue(respData.Data.InstanceIds[0])
 	tflog.Trace(ctx, "created a resource")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -267,6 +285,8 @@ func (r *InstanceResource) Read(ctx context.Context, req resource.ReadRequest, r
 	data.SshKeyNames, _ = types.ListValueFrom(ctx, types.StringType, respData.Data.SshKeyNames)
 	data.InstanceTypeName = types.StringValue(respData.Data.InstanceType.Name)
 	data.RegionName = types.StringValue(respData.Data.Region.Name)
+	// data.IP = types.StringValue(respData.Data.IP)
+	// data.Status = types.StringValue(respData.Data.Status)
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
