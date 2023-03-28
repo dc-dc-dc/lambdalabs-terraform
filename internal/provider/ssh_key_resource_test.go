@@ -2,21 +2,23 @@ package provider
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccSSHKeyResource(t *testing.T) {
+	name := fmt.Sprintf("testacc-sshkey-%d", rand.Int())
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccSSHKeyResourceConfig("one"),
+				Config: testAccSSHKeyResourceConfig(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("lambdalabs_sshkey.test", "name", "one"),
+					resource.TestCheckResourceAttr("lambdalabs_sshkey.test", "name", name),
 					resource.TestCheckResourceAttrSet("lambdalabs_sshkey.test", "id"),
 				),
 			},
