@@ -192,14 +192,7 @@ func (r *SSHKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 	// find the ssh-key in the list
-	var key *SSHKey
-	for _, s := range respData.Data {
-		if s.ID == data.Id.ValueString() {
-			// Found
-			key = &s
-			break
-		}
-	}
+	key := findKey(respData.Data, data.Id.ValueString())
 	if key == nil {
 		resp.State.RemoveResource(ctx)
 		return
@@ -214,6 +207,15 @@ func (r *SSHKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func findKey(keys []SSHKey, id string) *SSHKey {
+	for i := range keys {
+		if keys[i].ID == id {
+			return &keys[i]
+		}
+	}
+	return nil
 }
 
 func (r *SSHKeyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

@@ -36,8 +36,8 @@ func main() {
 
 	opts := providerserver.ServeOpts{
 		// TODO: Update this string with the published name of your provider.
-		Address: "registry.terraform.io/hashicorp/scaffolding",
-		Debug:   debug,
+		// Address: "registry.terraform.io/hashicorp/scaffolding",
+		Debug: debug,
 	}
 
 	err := providerserver.Serve(context.Background(), provider.New(version), opts)
